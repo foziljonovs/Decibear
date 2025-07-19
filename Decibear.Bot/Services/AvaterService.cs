@@ -13,9 +13,9 @@ public class AvaterService(
     {
         try
         {
-            _httpClient.BaseAddress = new Uri($"{_configuration["Decibear:BaseUrl"]}/{request.Style.UrlStyle()}/png?seed={request.Seed}");
+            string url = $"{_configuration["Decibear:BaseUrl"]}/{request.Style.UrlStyle()}/png?seed={request.Seed}";
 
-            var response = await _httpClient.GetAsync(_httpClient.BaseAddress);
+            var response = await _httpClient.GetAsync(url);
 
             if(response.IsSuccessStatusCode)
                 return await response.Content.ReadAsByteArrayAsync();

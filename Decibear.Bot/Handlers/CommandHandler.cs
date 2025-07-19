@@ -38,25 +38,40 @@ public class CommandHandler(
 
     private async Task HandleMessageAsync(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
     {
+        var userId = message.From?.Id;
+
         if (message.Text is not null && message.Text.StartsWith("/"))
         {
-            var command = message.Text.Split(' ')[0].TrimStart('/').ToLowerInvariant();
+            var parts = message.Text.Split(" ", 2);
+            var command = parts[0].TrimStart('/').ToLowerInvariant();
+            var seed = parts.Length > 1 ? parts[1] : null;
+
+            if(command is "start")
+            {
+                await botClient.SendMessage(message.Chat.Id, "Salom! Avataringizni yaratish uchun /avataaars, /bottts, /fun-emoji, /pixel-art buyrug'laridan birini yuboring.", cancellationToken: cancellationToken);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(seed))
+            {
+                await botClient.SendMessage(message.Chat.Id, "Iltimos, buyruqdan keyin matn (seed) kiriting. Misol: /fun-emoji Ali", cancellationToken: cancellationToken);
+                return;
+            }
+
             switch (command)
             {
-                case "start":
-                    await botClient.SendMessage(message.Chat.Id, "Salom! Avataringizni yaratish uchun /avatar buyrug'ini yuboring.", cancellationToken: cancellationToken);
-                    break;
                 case "fun-emoji":
                     {
                         var request = new Models.Request
                         {
                             Style = Style.FunEmoji,
-                            Seed = message.Chat.Id.ToString()
+                            Seed = seed
                         };
 
                         var avatarBytes = await _avatarService.GetAsync(request);
                         using var stream = new MemoryStream(avatarBytes);
-                        await botClient.SendPhoto(message.Chat.Id, stream, "Bu sizning avatariz!", cancellationToken: cancellationToken);
+                        await botClient.SendPhoto(message.Chat.Id, stream, "Bu sizning emoji!", cancellationToken: cancellationToken);
+                        Console.WriteLine($"user id: {userId}, seed: {request.Seed} style: {request.Style}");
                         break;
                     }
                 case "avataaars":
@@ -64,12 +79,13 @@ public class CommandHandler(
                         var request = new Models.Request
                         {
                             Style = Style.PixelArt,
-                            Seed = message.Chat.Id.ToString()
+                            Seed = seed
                         };
 
                         var avatarBytes = await _avatarService.GetAsync(request);
                         using var stream = new MemoryStream(avatarBytes);
-                        await botClient.SendPhoto(message.Chat.Id, stream, "Bu sizning avatariz!", cancellationToken: cancellationToken);
+                        await botClient.SendPhoto(message.Chat.Id, stream, "Bu sizning avatar!", cancellationToken: cancellationToken);
+                        Console.WriteLine($"user id: {userId}, seed: {request.Seed} style: {request.Style}");
                         break;
                     }
 
@@ -78,12 +94,13 @@ public class CommandHandler(
                         var request = new Models.Request
                         {
                             Style = Style.Bottts,
-                            Seed = message.Chat.Id.ToString()
+                            Seed = seed
                         };
 
                         var avatarBytes = await _avatarService.GetAsync(request);
                         using var stream = new MemoryStream(avatarBytes);
-                        await botClient.SendPhoto(message.Chat.Id, stream, "Bu sizning avatariz!", cancellationToken: cancellationToken);
+                        await botClient.SendPhoto(message.Chat.Id, stream, "Bu sizning boots!", cancellationToken: cancellationToken);
+                        Console.WriteLine($"user id: {userId}, seed: {request.Seed} style: {request.Style}");
                         break;
                     }
                 case "pixel-art":
@@ -91,16 +108,17 @@ public class CommandHandler(
                         var request = new Models.Request
                         {
                             Style = Style.PixelArt,
-                            Seed = message.Chat.Id.ToString()
+                            Seed = seed
                         };
 
                         var avatarBytes = await _avatarService.GetAsync(request);
                         using var stream = new MemoryStream(avatarBytes);
-                        await botClient.SendPhoto(message.Chat.Id, stream, "Bu sizning avatariz!", cancellationToken: cancellationToken);
+                        await botClient.SendPhoto(message.Chat.Id, stream, "Bu sizning pixel-art!", cancellationToken: cancellationToken);
+                        Console.WriteLine($"user id: {userId}, seed: {request.Seed} style: {request.Style}");
                         break;
                     }
                 default:
-                    await botClient.SendMessage(message.Chat.Id, "Noma'lum buyruq. Iltimos, /start yoki /avatar yuboring.", cancellationToken: cancellationToken);
+                    await botClient.SendMessage(message.Chat.Id, "Noma'lum buyruq. Quyidagilardan birini yuboring: /fun-emoji, /bottts, /avataaars, /pixel-art", cancellationToken: cancellationToken);
                     break;
             }
         }
